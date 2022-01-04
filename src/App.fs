@@ -1,16 +1,16 @@
 module App
 
-open Browser.Dom
+open Elmish
+open Elmish.React
+open Feliz
 
-// Mutable variable to count the number of times we clicked the button
-let mutable count = 0
+let update msg model =
+    model
 
-// Get a reference to our button and cast the Element to an HTMLButtonElement
-let myButton =
-    document.querySelector (".my-button") :?> Browser.Types.HTMLButtonElement
-
-// Register our listener
-myButton.onclick <-
-    fun _ ->
-        count <- count + 1
-        myButton.innerText <- sprintf "You clicked: %i time(s)" count
+let view model dispatch =
+    Html.text "Hello world"
+    
+Program.mkSimple (fun _ -> "init") update view
+|> Program.withConsoleTrace
+|> Program.withReactSynchronous "feliz-app"
+|> Program.run

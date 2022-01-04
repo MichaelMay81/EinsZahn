@@ -20,7 +20,7 @@ module.exports = {
     ]
   ],
   packageOptions: {
-    /* ... */
+    'external': ['react-native']
   },
   devOptions: {
     /* ... */

@@ -6,7 +6,11 @@
     <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Fable.Browser.Dom" Version="2.2.0" />
-    <PackageReference Include="Fable.Core" Version="3.2.3" />
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="fable.elmish.react" Version="3.0.1" />
+    <PackageReference Include="feliz" Version="1.57.0" />
   </ItemGroup>
 </Project>
