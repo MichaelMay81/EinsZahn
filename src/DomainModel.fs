@@ -6,7 +6,7 @@ type Ship = {
     Position: Vector
     Rotation: float<deg>
     Movement: Vector }
-    with static member Default = {
+    with static member init = {
             Position = Vector.Zero
             Rotation = 0.<deg>
             Movement = Vector.Zero }
@@ -14,4 +14,5 @@ type Ship = {
 type Model = {
     Ship: Ship
     PressedKeys: GameHelper.PressedKeys
-}
+    LastRenderTimestamp: float
+} with static member init = { Ship = Ship.init; PressedKeys = Set.empty; LastRenderTimestamp = 0. }

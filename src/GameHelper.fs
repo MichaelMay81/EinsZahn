@@ -15,6 +15,7 @@ type Key =
 type Message =
 | KeyDown of Key
 | KeyUp of Key
+| Render of float
 
 type PressedKeys = Set<Key>
 
@@ -38,10 +39,17 @@ let private registerEvents dispatch =
     //document.onkeypress <- foobar "KeyPress"
     document.onkeyup <- foobar Message.KeyUp "KeyUp"
 
+    window.requestAnimationFrame (Render >> dispatch)
+    |> Render
+    |> dispatch
+
 let update (msg:Message) (model:PressedKeys) =
-    match msg with
-    | KeyDown key -> Set.add key model
-    | KeyUp key   -> Set.remove key model
+    let newModel =
+        match msg with
+        | KeyDown key -> Set.add key model
+        | KeyUp key   -> Set.remove key model
+        | _ -> model
+    newModel, Cmd.ofSub (fun dispatch -> window.requestAnimationFrame (Render >> dispatch) |> ignore)
 
 let init () =
     Set.empty, Cmd.ofSub registerEvents
