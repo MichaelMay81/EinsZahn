@@ -10,3 +10,8 @@ type Ship = {
             Position = Vector.Zero
             Rotation = 0.<deg>
             Movement = Vector.Zero }
+
+type Model = {
+    Ship: Ship
+    PressedKeys: GameHelper.PressedKeys
+}

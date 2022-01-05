@@ -4,6 +4,7 @@ open Elmish
 open Elmish.React
 open Feliz
 open MyMath
+open Domain
 
 let spaceShip (ship:Domain.Ship) =
     Svg.svg [
@@ -31,37 +32,39 @@ let spaceShip (ship:Domain.Ship) =
         ]
     ]
 
-let update msg (model:Domain.Ship) =
-    let newModel =
-        match msg with
-        | GameHelper.Message.KeyDown "a" ->
-            { model with Rotation = model.Rotation - 5.<deg>}
-        | GameHelper.Message.KeyDown "d" ->
-            { model with Rotation = model.Rotation + 5.<deg>}
-        | GameHelper.Message.KeyDown "w" ->
-            let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -model.Rotation)
-            let newPos = model.Position + dir
-            // printfn "foobar %A %A %A" model.Rotation dir newPos
-            { model with Position = newPos } //{model.Position with Y = model.Position.Y + 1.}}
-        | GameHelper.Message.KeyDown "s" ->
-            let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -model.Rotation) * -1.
-            let newPos = model.Position + dir
-            // printfn "foobar %A %A %A" model.Rotation dir newPos
-            { model with Position = newPos } //{model.Position with Y = model.Position.Y - 1.}}
-        | GameHelper.Message.KeyDown key ->
-            model
-    newModel, Cmd.none
+let update msg (model:Model) =
+    let pressedKeys = GameHelper.update msg model.PressedKeys
+    printfn "%A" (pressedKeys |> Set.toList)
+    // let newModel =
+    //     match msg with
+    //     | GameHelper.Message.KeyDown "a" ->
+    //         { model with Rotation = model.Rotation - 5.<deg>}
+    //     | GameHelper.Message.KeyDown "d" ->
+    //         { model with Rotation = model.Rotation + 5.<deg>}
+    //     | GameHelper.Message.KeyDown "w" ->
+    //         let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -model.Rotation)
+    //         let newPos = model.Position + dir
+    //         // printfn "foobar %A %A %A" model.Rotation dir newPos
+    //         { model with Position = newPos } //{model.Position with Y = model.Position.Y + 1.}}
+    //     | GameHelper.Message.KeyDown "s" ->
+    //         let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -model.Rotation) * -1.
+    //         let newPos = model.Position + dir
+    //         // printfn "foobar %A %A %A" model.Rotation dir newPos
+    //         { model with Position = newPos } //{model.Position with Y = model.Position.Y - 1.}}
+    //     | GameHelper.Message.KeyDown key ->
+    //         model
+    {model with PressedKeys = pressedKeys}, Cmd.none
 
-let view model dispatch =
+let view (model:Model) dispatch =
     Html.p [
         Html.text "Hello world"
-        spaceShip model
+        spaceShip model.Ship
     ]
 
 let init () =
-    Domain.Ship.Default, Cmd.ofSub GameHelper.registerEvents
+    let pressedKeys, cmd = GameHelper.init ()
+    { Ship=Domain.Ship.Default; PressedKeys=pressedKeys }, cmd
 
-// Program.mkSimple (fun _ -> "init") update view
 Program.mkProgram init update view
 // |> Program.withConsoleTrace
 |> Program.withReactSynchronous "feliz-app"
