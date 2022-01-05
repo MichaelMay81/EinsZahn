@@ -39,13 +39,13 @@ let update msg (model:Domain.Ship) =
         | GameHelper.Message.KeyDown "d" ->
             { model with Rotation = model.Rotation + 5.<deg>}
         | GameHelper.Message.KeyDown "w" ->
-            let dir = rotate {X=0.;Y=1.} (convertDegToRad -model.Rotation)
-            let newPos = add model.Position dir
+            let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -model.Rotation)
+            let newPos = model.Position + dir
             // printfn "foobar %A %A %A" model.Rotation dir newPos
             { model with Position = newPos } //{model.Position with Y = model.Position.Y + 1.}}
         | GameHelper.Message.KeyDown "s" ->
-            let dir = mul (rotate {X=0.;Y=1.} (convertDegToRad -model.Rotation)) -1.
-            let newPos = add model.Position dir
+            let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -model.Rotation) * -1.
+            let newPos = model.Position + dir
             // printfn "foobar %A %A %A" model.Rotation dir newPos
             { model with Position = newPos } //{model.Position with Y = model.Position.Y - 1.}}
         | GameHelper.Message.KeyDown key ->
