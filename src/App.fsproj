@@ -3,6 +3,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="MyMath.fs" />
+    <Compile Include="GameHelper.fs" />
+    <Compile Include="DomainModel.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>
