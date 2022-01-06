@@ -13,6 +13,5 @@ type Ship = {
 
 type Model = {
     Ship: Ship
-    PressedKeys: GameHelper.PressedKeys
-    LastRenderTimestamp: float
-} with static member init = { Ship = Ship.init; PressedKeys = Set.empty; LastRenderTimestamp = 0. }
+    Game: GameHelper.Model
+}

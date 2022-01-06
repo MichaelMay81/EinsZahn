@@ -33,24 +33,24 @@ let spaceShip (ship:Domain.Ship) =
     ]
 
 let update msg (model:Model) =
-    let pressedKeys, cmd = GameHelper.update msg model.PressedKeys
+    let gameModel, cmd = GameHelper.update msg model.Game
     // printfn "%A" (pressedKeys |> Set.toList)
-    let newModel = { model with PressedKeys = pressedKeys }
+    let newModel = { model with Game = gameModel }
 
     let newModel = 
         match msg with
-        | GameHelper.Render timestamp ->
-            let timeStep = (timestamp - newModel.LastRenderTimestamp) / 10.
+        | GameHelper.Render timeStep ->
+            let timeStep = (float timeStep) / 10.
             // printfn "fps: %f" (1000. / (timestamp - model.LastRenderTimestamp))
             let newShip =
-                pressedKeys
+                newModel.Game.PressedKeys
                 |> Set.toList
                 |> List.fold (fun newShip key ->
                     match key with
                     | GameHelper.KeyA ->
-                        { newShip with Rotation = newShip.Rotation - (5.<deg> * timeStep)}
+                        { newShip with Rotation = newShip.Rotation - (3.<deg> * timeStep)}
                     | GameHelper.KeyD ->
-                        { newShip with Rotation = newShip.Rotation + (5.<deg> * timeStep)}
+                        { newShip with Rotation = newShip.Rotation + (3.<deg> * timeStep)}
                     | GameHelper.KeyW ->
                         let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -newShip.Rotation)
                         let newPos = newShip.Position + (dir * timeStep)
@@ -64,7 +64,7 @@ let update msg (model:Model) =
                     | _ -> newShip
                     ) newModel.Ship
 
-            { newModel with LastRenderTimestamp = timestamp; Ship = newShip}
+            { newModel with Ship = newShip}
         | _ -> newModel
 
     // let newModel =
@@ -94,8 +94,10 @@ let view (model:Model) dispatch =
     ]
 
 let init () =
-    let pressedKeys, cmd = GameHelper.init ()
-    { Model.init with PressedKeys=pressedKeys }, cmd
+    let gameModel, cmd = GameHelper.init ()
+    {   Ship = Ship.init
+        Game = gameModel
+    }, cmd
 
 Program.mkProgram init update view
 // |> Program.withConsoleTrace
