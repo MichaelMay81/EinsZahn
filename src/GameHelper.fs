@@ -1,6 +1,10 @@
 namespace GameHelper
 
+open FSharp.Reflection
+open Elmish
 open Browser
+open Feliz
+open Fable.Core
 
 type Key =
 | Digit0 | Digit1 | Digit2 | Digit3 | Digit4 | Digit5 | Digit6 | Digit7 | Digit8 | Digit9
@@ -34,8 +38,6 @@ type Model = {
 }
 
 module Interop =
-    open Fable.Core
-
     type IResizeObserver =
         abstract observe : Types.HTMLElement -> unit
         abstract unobserve : Types.HTMLElement -> unit
@@ -50,10 +52,6 @@ module Interop =
     let createResizeObserver(handler: IObserverEntry array -> unit) : IResizeObserver = jsNative
 
 module Funcs =
-    open FSharp.Reflection
-    open Elmish
-    open Feliz
-    
     /// convert string to Key
     let private keyFromString (s:string) : Key=
         let info =
@@ -74,7 +72,7 @@ module Funcs =
         
         document.onkeydown <- keyboardEvent Message.KeyDown "KeyDown"
         document.onkeyup <- keyboardEvent Message.KeyUp "KeyUp"
-
+        
         window.requestAnimationFrame (
             int >> AnimationFrame >> Internal >> dispatch) |> ignore
 
@@ -131,4 +129,9 @@ module Funcs =
         
         Html.div ([
             prop.ref playfieldRef
+            // prop.tabIndex 1
+            // prop.onKeyDown (fun event ->
+            //     printfn "KeyDown %A" event.code
+            //     event.code |> keyFromString |> Message.KeyDown |> dispatch)
+            // prop.onKeyUp (fun event -> event.code |> keyFromString |> Message.KeyUp |> dispatch)
         ] @ props)
