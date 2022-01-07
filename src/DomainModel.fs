@@ -6,7 +6,8 @@ type Controls = {
     Forward: Key
     Left: Key
     Right: Key
-} with static member init = { Forward=KeyW; Left=KeyA; Right=KeyD }
+    Fire: Key
+} with static member init = { Forward=KeyW; Left=KeyA; Right=KeyD; Fire=Space }
 
 type Ship = {
     CallSign: string
@@ -23,7 +24,13 @@ type Ship = {
             Rotation = 0.<deg>
             Movement = Vector.Zero }
 
+type Bullet = {
+    Position: Vector
+    Movement: Vector
+}
+
 type Model = {
     Ships: Ship list
+    Bullets: Bullet list
     Game: GameHelper.Model
 }

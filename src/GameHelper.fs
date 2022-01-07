@@ -14,6 +14,7 @@ type Key =
 | ShiftLeft | ShiftRight | AltLeft | AltRight | ControlLeft | ControlRight
 | ArrowUp | ArrowDown | ArrowLeft | ArrowRight
 | Numpad0 | Numpad1 | Numpad2 | Numpad3 | Numpad4 | Numpad5 | Numpad6 | Numpad7 | Numpad8 | Numpad9
+| Space | Tab
 | Other of string
 
 type Size = { Width:int; Height:int }

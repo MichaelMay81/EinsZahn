@@ -43,15 +43,48 @@ let spaceShip (ship:Domain.Ship) =
             ]
         ]
     ]
+let bullet (bullet:Domain.Bullet) =
+    Html.div [
+        prop.style [
+            style.position.absolute
+            style.left -2
+            style.top -10
+        ]
+        prop.children [
+            Svg.svg [
+                svg.transform [
+                    transform.translate (bullet.Position.X, bullet.Position.Y)
+                ]
+                svg.width 4
+                svg.height 4
+                svg.children [
+                    Svg.circle [
+                        svg.cx 2
+                        svg.cy 2
+                        svg.r 2
+                        svg.fill "black"
+                    ]
+                ]
+            ]
+        ]
+    ]
 
-let private updateShip (pressedKeys:Set<GameHelper.Key>) (timeStep:float) (ship:Ship) =
+let private processShipMovCmd (pressedKeys:Set<GameHelper.Key>) (timeStep:float) (ship:Ship) =
     [   ship.Controls.Forward, Simulation.ThrustForward
         ship.Controls.Left, Simulation.ThrustLeft
-        ship.Controls.Right, Simulation.ThrustRight]
+        ship.Controls.Right, Simulation.ThrustRight ]
     |> Seq.filter (fst >> flip Set.contains pressedKeys)
     |> Seq.map snd
-    |> Seq.fold (fun state cmd -> Simulation.shipCmd state cmd timeStep) ship
-    
+    |> Seq.fold (fun newShip cmd ->
+        Simulation.shipMovCmd newShip cmd timeStep) ship
+
+let private processFireCmds (pressedKey:GameHelper.Key) (ships:Ship list) =
+    ships
+    |> Seq.filter (fun s -> s.Controls.Fire = pressedKey )
+    |> Seq.map Simulation.shipFireCmd
+    |> Seq.filter (fun bullet -> (abs bullet.Movement.X) > 0.1 || (abs bullet.Movement.Y) > 0.1)
+    |> Seq.toList
+
 let update msg (model:Model) =
     let gameModel, cmd = GameHelper.Funcs.update msg model.Game
     // printfn "%A" (pressedKeys |> Set.toList)
@@ -62,12 +95,20 @@ let update msg (model:Model) =
         | GameHelper.Render timeStep ->
             let timeStep = (float timeStep) / 10.
             // printfn "fps: %f" (1000. / (timestamp - model.LastRenderTimestamp))
-            let newShips = newModel.Ships |> List.map (updateShip model.Game.PressedKeys timeStep)
-
-            { newModel with Ships = newShips}
+            let newShips = newModel.Ships |> List.map (processShipMovCmd model.Game.PressedKeys timeStep)
+            { newModel with Ships = newShips }
+        | GameHelper.KeyDown key ->
+            let newBullets = newModel.Bullets @ (newModel.Ships |> processFireCmds key)
+            { newModel with Bullets = newBullets}
         | _ -> newModel
 
-    { newModel with Ships = newModel.Ships |> List.map (fun ship -> Simulation.checkShipWorldBoundaries ship newModel.Game.WindowSize) }, cmd
+    // simulation
+    let newShips = newModel.Ships |> List.map (fun ship -> Simulation.simulateShip ship newModel.Game.WindowSize model.Game.ElapsedTime)
+    let newBullets = newModel.Bullets |> Simulation.simulateBullets newModel.Game.WindowSize newModel.Game.ElapsedTime
+    { newModel with
+        Ships = newShips
+        Bullets = newBullets
+    }, cmd
 
 let view (model:Model) dispatch =
     Html.div [
@@ -84,7 +125,8 @@ let view (model:Model) dispatch =
                 style.zIndex -1
             ]
             prop.children
-                (model.Ships |> List.map spaceShip)
+                ((model.Ships |> List.map spaceShip)
+                @ (model.Bullets |> List.map bullet))
         ]
         Html.text "Hello world"
     ]
@@ -96,14 +138,15 @@ let init () =
             { Ship.init with
                 CallSign = "ZweiZahn"
                 Color    = "Green"
-                Controls = { Forward=GameHelper.ArrowUp; Left=GameHelper.ArrowLeft; Right=GameHelper.ArrowRight }
+                Controls = { Forward=GameHelper.ArrowUp; Left=GameHelper.ArrowLeft; Right=GameHelper.ArrowRight; Fire=GameHelper.AltRight }
                 Position = { X = 100.; Y = 100. } }
             { Ship.init with
                 CallSign = "DreiZahn"
                 Color    = "black"
-                Controls = { Forward=GameHelper.Numpad8; Left=GameHelper.Numpad4; Right=GameHelper.Numpad6 }
+                Controls = { Forward=GameHelper.Numpad8; Left=GameHelper.Numpad4; Right=GameHelper.Numpad6; Fire=GameHelper.Numpad0 }
                 Position = { X = 200.; Y = 200. } }
         ]
+        Bullets = List.empty
         Game = gameModel
     }, cmd
 
