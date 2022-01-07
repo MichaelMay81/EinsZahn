@@ -12,6 +12,8 @@ type Key =
 | KeyA | KeyS | KeyD | KeyF | KeyG | KeyH | KeyJ | KeyK | KeyL
 | KeyZ | KeyX | KeyC | KeyV | KeyB | KeyN | KeyM
 | ShiftLeft | ShiftRight | AltLeft | AltRight | ControlLeft | ControlRight
+| ArrowUp | ArrowDown | ArrowLeft | ArrowRight
+| Numpad0 | Numpad1 | Numpad2 | Numpad3 | Numpad4 | Numpad5 | Numpad6 | Numpad7 | Numpad8 | Numpad9
 | Other of string
 
 type Size = { Width:int; Height:int }
@@ -59,7 +61,9 @@ module Funcs =
             |> Array.tryFind (fun case -> case.Name = s)
         match info with
         | Some case -> FSharpValue.MakeUnion(case,[||]) :?> Key
-        | None -> Other s
+        | None ->
+            printfn "Key NIY: %s" s
+            Other s
 
     /// register keyboard- and window resize-events
     let private registerKeyboardEvents dispatch =

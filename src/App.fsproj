@@ -16,5 +16,6 @@
   <ItemGroup>
     <PackageReference Include="fable.elmish.react" Version="3.0.1" />
     <PackageReference Include="feliz" Version="1.57.0" />
+    <PackageReference Include="fsharpplus" Version="1.2.2" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,8 @@
 module App
 
+// EinsZahn
+
+open FSharpPlus
 open Elmish
 open Elmish.React
 open Feliz
@@ -26,7 +29,7 @@ let spaceShip (ship:Domain.Ship) =
                         svg.cx 15
                         svg.cy 15
                         svg.r 15
-                        svg.fill "blue"
+                        svg.fill ship.Color
                     ]
                     Svg.polygon [
                         svg.points [
@@ -41,6 +44,14 @@ let spaceShip (ship:Domain.Ship) =
         ]
     ]
 
+let private updateShip (pressedKeys:Set<GameHelper.Key>) (timeStep:float) (ship:Ship) =
+    [   ship.Controls.Forward, Simulation.ThrustForward
+        ship.Controls.Left, Simulation.ThrustLeft
+        ship.Controls.Right, Simulation.ThrustRight]
+    |> Seq.filter (fst >> flip Set.contains pressedKeys)
+    |> Seq.map snd
+    |> Seq.fold (fun state cmd -> Simulation.shipCmd state cmd timeStep) ship
+    
 let update msg (model:Model) =
     let gameModel, cmd = GameHelper.Funcs.update msg model.Game
     // printfn "%A" (pressedKeys |> Set.toList)
@@ -51,32 +62,12 @@ let update msg (model:Model) =
         | GameHelper.Render timeStep ->
             let timeStep = (float timeStep) / 10.
             // printfn "fps: %f" (1000. / (timestamp - model.LastRenderTimestamp))
-            let newShip =
-                newModel.Game.PressedKeys
-                |> Set.toList
-                |> List.fold (fun newShip key ->
-                    match key with
-                    | GameHelper.KeyA ->
-                        { newShip with Rotation = newShip.Rotation - (3.<deg> * timeStep)}
-                    | GameHelper.KeyD ->
-                        { newShip with Rotation = newShip.Rotation + (3.<deg> * timeStep)}
-                    | GameHelper.KeyW ->
-                        let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -newShip.Rotation)
-                        let newPos = newShip.Position + (dir * timeStep)
-                        // printfn "foobar %A %A %A" model.Rotation dir newPos
-                        { newShip with Position = newPos }
-                    | GameHelper.KeyS ->
-                        let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -newShip.Rotation) * -1.
-                        let newPos = newShip.Position + (dir * timeStep)
-                        // printfn "foobar %A %A %A" model.Rotation dir newPos
-                        { newShip with Position = newPos }
-                    | _ -> newShip
-                    ) newModel.Ship
+            let newShips = newModel.Ships |> List.map (updateShip model.Game.PressedKeys timeStep)
 
-            { newModel with Ship = newShip}
+            { newModel with Ships = newShips}
         | _ -> newModel
 
-    { newModel with Ship = Simulation.checkShipWorldBoundaries newModel.Ship newModel.Game.WindowSize }, cmd
+    { newModel with Ships = newModel.Ships |> List.map (fun ship -> Simulation.checkShipWorldBoundaries ship newModel.Game.WindowSize) }, cmd
 
 let view (model:Model) dispatch =
     Html.div [
@@ -92,16 +83,27 @@ let view (model:Model) dispatch =
                 //style.width (length.vw 100)
                 style.zIndex -1
             ]
-            prop.children [
-                spaceShip model.Ship
-            ]
+            prop.children
+                (model.Ships |> List.map spaceShip)
         ]
         Html.text "Hello world"
     ]
 
 let init () =
     let gameModel, cmd = GameHelper.Funcs.init ()
-    {   Ship = Ship.init
+    {   Ships = [
+            Ship.init
+            { Ship.init with
+                CallSign = "ZweiZahn"
+                Color    = "Green"
+                Controls = { Forward=GameHelper.ArrowUp; Left=GameHelper.ArrowLeft; Right=GameHelper.ArrowRight }
+                Position = { X = 100.; Y = 100. } }
+            { Ship.init with
+                CallSign = "DreiZahn"
+                Color    = "black"
+                Controls = { Forward=GameHelper.Numpad8; Left=GameHelper.Numpad4; Right=GameHelper.Numpad6 }
+                Position = { X = 200.; Y = 200. } }
+        ]
         Game = gameModel
     }, cmd
 
