@@ -29,15 +29,20 @@ let spaceShip (ship:Domain.Ship) =
                         svg.cx 15
                         svg.cy 15
                         svg.r 15
-                        svg.fill ship.Color
+                        // svg.fill "red"
+                        svg.fill "url(#grad1)"
+                        svg.fillOpacity ship.ShieldStrength
+                        
                     ]
                     Svg.polygon [
                         svg.points [
-                            15, 0
-                            5, 25
-                            25, 25
+                            15, 5
+                            8, 22
+                            22, 22
                         ]
-                        svg.fill "red"
+                        svg.fill ship.Color
+                        // svg.stroke "black"
+                        // svg.strokeWidth 0.1
                     ]
                 ]
             ]
@@ -105,6 +110,10 @@ let update msg (model:Model) =
     // simulation
     let newShips = newModel.Ships |> List.map (fun ship -> Simulation.simulateShip ship newModel.Game.WindowSize model.Game.ElapsedTime)
     let newBullets = newModel.Bullets |> Simulation.simulateBullets newModel.Game.WindowSize newModel.Game.ElapsedTime
+
+    // simulate collisions
+    let newShips, newBullets = CollisionDetection.simulateCollisions newShips newBullets
+
     { newModel with
         Ships = newShips
         Bullets = newBullets
@@ -112,23 +121,58 @@ let update msg (model:Model) =
 
 let view (model:Model) dispatch =
     Html.div [
-        GameHelper.Funcs.Playfield dispatch [
-            prop.style [
-                style.backgroundColor "grey"
-                style.position.absolute
-                style.top 50
-                style.left 50
-                style.height (length.calc "100vh - 100px")
-                style.width (length.calc "100vw - 100px")
-                // style.heigth (length.vh 100)
-                //style.width (length.vw 100)
-                style.zIndex -1
-            ]
-            prop.children
-                ((model.Ships |> List.map spaceShip)
-                @ (model.Bullets |> List.map bullet))
+        prop.style [
+            style.position.absolute
+            style.top 20
+            style.left 30
+            style.width (length.calc "100vw - 60px")
         ]
-        Html.text "Hello world"
+        prop.children [
+            Html.div [
+                prop.style [ style.fontFamily "monospace"]
+                prop.children [ Html.text "EinsZahn"]
+            ]
+            GameHelper.Funcs.Playfield dispatch [
+                prop.style [
+                    style.backgroundColor "grey"
+                    style.position.relative
+                    style.height (length.calc "100vh - 80px")
+                    style.zIndex -1
+                ]
+                prop.children ([
+                    Svg.svg [
+                        Svg.defs [
+                            Svg.radialGradient [
+                                svg.id "grad1"
+                                svg.cx 0.5
+                                svg.cy 0.5
+                                svg.r  0.9
+                                svg.fx 0.5
+                                svg.fy 0.5
+                                svg.children [
+                                    Svg.stop [
+                                        svg.offset 0.3
+                                        svg.stopColor "red"
+                                        svg.stopOpacity 0.1
+                                    ]
+                                    Svg.stop [
+                                        svg.offset 1.
+                                        svg.stopColor "red"
+                                        svg.stopOpacity 1.
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+                @ (model.Ships |> List.map spaceShip)
+                @ (model.Bullets |> List.map bullet))
+            ]
+            Html.div [
+                prop.style [ style.fontFamily "monospace"]
+                prop.children [ Html.text $"fps %.0f{1000./float model.Game.ElapsedTime} spf %i{model.Game.ElapsedTime}ms"]
+            ]
+        ]
     ]
 
 let init () =

@@ -33,11 +33,11 @@ let shipMovCmd (ship:Ship) (cmd:ShipCmd) (timeStep:float) : Ship =
     | ThrustLeft ->
         { ship with Rotation = ship.Rotation - (3.<deg> * timeStep)}
     | ThrustForward ->
-        { ship with Movement = Vector.rotate {X=0.;Y=1.} (convertDegToRad -ship.Rotation) }
+        { ship with Movement = Vector.rotate {X=0.;Y=1.} (angle.convertDegToRad -ship.Rotation) }
 
 let shipFireCmd (ship:Ship) : Bullet =
-    let dir = Vector.rotate {X=0.;Y=1.} (convertDegToRad -ship.Rotation)
-    { Position = ship.Position + (dir * 15.); Movement = ship.Movement + dir }
+    let dir = Vector.rotate {X=0.;Y=1.} (angle.convertDegToRad -ship.Rotation)
+    { Position = ship.Position + (dir * 20.); Movement = ship.Movement + dir }
 
 let simulateShip (ship:Ship) (worldSize:Size) (timeStep:int) : Ship =
     let timeStep = (float timeStep) / 20.

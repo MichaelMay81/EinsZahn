@@ -3,9 +3,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="MyMath.fs" />
+    <Compile Include="MyMath/angle.fs" />
+    <Compile Include="MyMath/Vector.fs" />
+    <Compile Include="MyMath/Collision.fs" />
     <Compile Include="GameHelper.fs" />
     <Compile Include="DomainModel.fs" />
+    <Compile Include="CollisionDetection.fs" />
     <Compile Include="Simulation.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>

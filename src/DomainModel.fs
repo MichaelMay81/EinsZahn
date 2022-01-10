@@ -15,14 +15,16 @@ type Ship = {
     Controls: Controls
     Position: Vector
     Rotation: float<deg>
-    Movement: Vector }
+    Movement: Vector
+    ShieldStrength: float}
     with static member init = {
             CallSign = "EinsZahn"
             Color    = "blue"
             Controls = Controls.init
             Position = Vector.Zero
             Rotation = 0.<deg>
-            Movement = Vector.Zero }
+            Movement = Vector.Zero
+            ShieldStrength = 1.}
 
 type Bullet = {
     Position: Vector
