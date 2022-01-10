@@ -1,6 +1,7 @@
 namespace GameHelper
 
 open FSharp.Reflection
+open FSharpPlus
 open Elmish
 open Browser
 open Feliz
@@ -34,10 +35,8 @@ type Message =
 type Model = {
     PressedKeys: Set<Key>
     WindowSize: Size
-    /// timestamp from last render frame
-    LastRenderTimestamp: int
-    /// ms elapsed since last render frame
-    ElapsedTime: int
+    /// timestamp from last several render frames
+    RenderTimestamps: int list
 }
 
 module Interop =
@@ -55,6 +54,30 @@ module Interop =
     let createResizeObserver(handler: IObserverEntry array -> unit) : IResizeObserver = jsNative
 
 module Funcs =
+    let elapsedTime (timestamps: int list) : int =
+        let ts1 = timestamps |> List.tryHead
+        let ts2 = timestamps |> List.tryItem 1
+        match ts1, ts2 with
+        | Some ts1, Some ts2 -> ts1 - ts2
+        | _, _ -> 0
+
+    /// calculates the average ms per frame
+    let msPerFrame (timestamps:int list) : float =
+        match timestamps |> List.length < 2 with
+        | true -> -1.
+        | false ->
+            timestamps
+            |> Seq.pairwise
+            |> Seq.map (fun (ts1,ts2) -> ts1 - ts2)
+            |> Seq.map float
+            |> Seq.average
+
+    /// calculate the averae frames per second
+    let framesPerSecond (timestamps:int list) : float =
+        match timestamps |> List.isEmpty with
+        | true -> -1.
+        | false -> 1000. / msPerFrame timestamps
+
     /// convert string to Key
     let private keyFromString (s:string) : Key=
         let info =
@@ -84,8 +107,7 @@ module Funcs =
     let init () : Model * Cmd<Message> =
         {   PressedKeys = Set.empty
             WindowSize = { Width = int window.innerWidth; Height = int window.innerHeight }
-            LastRenderTimestamp = 0
-            ElapsedTime = 0
+            RenderTimestamps = List.empty
         }, Cmd.ofSub registerKeyboardEvents
 
     let update (msg:Message) (model:Model) =
@@ -96,14 +118,17 @@ module Funcs =
         | Internal msg ->
             match msg with
             | AnimationFrame timestamp ->
-                let elapsedTime = timestamp - model.LastRenderTimestamp
-                let newModel =
-                    { model with LastRenderTimestamp = timestamp; ElapsedTime = elapsedTime }
-                let renderCmd = Cmd.ofSub (fun dispatch -> elapsedTime |> Render |> dispatch)
+                let newTimestamps =
+                    timestamp :: model.RenderTimestamps
+                    |> List.filter (fun ts -> timestamp - ts < 1000)
+                let elTime = elapsedTime newTimestamps
+
+                let renderCmd = Cmd.ofSub (fun dispatch -> elTime |> Render |> dispatch)
                 let rafCmd = Cmd.ofSub (fun dispatch ->
                     window.requestAnimationFrame (
-                        int >> AnimationFrame >> Internal >> dispatch) |> ignore)            
-                newModel, Cmd.batch [ renderCmd; rafCmd]
+                        int >> AnimationFrame >> Internal >> dispatch) |> ignore)  
+                
+                { model with RenderTimestamps = newTimestamps }, Cmd.batch [ renderCmd; rafCmd]
         | Render _ -> model, Cmd.none
 
     /// Playfield is a div ReactElement with a ResizeObserver sending Resize messages

@@ -95,31 +95,28 @@ let update msg (model:Model) =
     // printfn "%A" (pressedKeys |> Set.toList)
     let newModel = { model with Game = gameModel }
 
-    let newModel = 
-        match msg with
-        | GameHelper.Render timeStep ->
-            let timeStep = (float timeStep) / 10.
-            // printfn "fps: %f" (1000. / (timestamp - model.LastRenderTimestamp))
-            let newShips = newModel.Ships |> List.map (processShipMovCmd model.Game.PressedKeys timeStep)
-            { newModel with Ships = newShips }
-        | GameHelper.KeyDown key ->
-            let newBullets = newModel.Bullets @ (newModel.Ships |> processFireCmds key)
-            { newModel with Bullets = newBullets}
-        | _ -> newModel
+    match msg with
+    | GameHelper.Render timeStep ->
+        let timeStep = (float timeStep)
+        // printfn "fps: %f" (1000. / (timestamp - model.LastRenderTimestamp))
+        let newShips = newModel.Ships |> List.map (processShipMovCmd model.Game.PressedKeys (timeStep / 10.))
 
-    // simulation
-    let newShips = newModel.Ships |> List.map (fun ship -> Simulation.simulateShip ship newModel.Game.WindowSize model.Game.ElapsedTime)
-    let newBullets = newModel.Bullets |> Simulation.simulateBullets newModel.Game.WindowSize newModel.Game.ElapsedTime
+        // simulation
+        let newShips = newShips |> List.map (fun ship -> Simulation.simulateShip ship newModel.Game.WindowSize timeStep)
+        let newBullets = newModel.Bullets |> Simulation.simulateBullets newModel.Game.WindowSize timeStep
 
-    // simulate collisions
-    let newShips, newBullets = CollisionDetection.simulateCollisions newShips newBullets
+        // simulate collisions
+        let newShips, newBullets = CollisionDetection.simulateCollisions newShips newBullets
 
-    { newModel with
-        Ships = newShips
-        Bullets = newBullets
-    }, cmd
+        { newModel with Ships = newShips; Bullets = newBullets }, cmd
+    | GameHelper.KeyDown key ->
+        let newBullets = newModel.Bullets @ (newModel.Ships |> processFireCmds key)
+        { newModel with Bullets = newBullets}, cmd
+    | _ -> newModel, cmd
 
 let view (model:Model) dispatch =
+    let fps = GameHelper.Funcs.framesPerSecond model.Game.RenderTimestamps
+    let mspf = GameHelper.Funcs.msPerFrame model.Game.RenderTimestamps
     Html.div [
         prop.style [
             style.position.absolute
@@ -130,7 +127,7 @@ let view (model:Model) dispatch =
         prop.children [
             Html.div [
                 prop.style [ style.fontFamily "monospace"]
-                prop.children [ Html.text "EinsZahn"]
+                prop.children [ Html.text "einszahn"]
             ]
             GameHelper.Funcs.Playfield dispatch [
                 prop.style [
@@ -170,7 +167,7 @@ let view (model:Model) dispatch =
             ]
             Html.div [
                 prop.style [ style.fontFamily "monospace"]
-                prop.children [ Html.text $"fps %.0f{1000./float model.Game.ElapsedTime} spf %i{model.Game.ElapsedTime}ms"]
+                prop.children [ Html.text $"fps %.0f{fps} spf %.0f{mspf}ms"]
             ]
         ]
     ]
@@ -183,12 +180,14 @@ let init () =
                 CallSign = "ZweiZahn"
                 Color    = "Green"
                 Controls = { Forward=GameHelper.ArrowUp; Left=GameHelper.ArrowLeft; Right=GameHelper.ArrowRight; Fire=GameHelper.AltRight }
-                Position = { X = 100.; Y = 100. } }
+                Position = { X = 100.; Y = 100. }
+                Rotation = 180.<deg> }
             { Ship.init with
                 CallSign = "DreiZahn"
                 Color    = "black"
                 Controls = { Forward=GameHelper.Numpad8; Left=GameHelper.Numpad4; Right=GameHelper.Numpad6; Fire=GameHelper.Numpad0 }
-                Position = { X = 200.; Y = 200. } }
+                Position = { X = 200.; Y = 200. }
+                Rotation = 270.<deg> }
         ]
         Bullets = List.empty
         Game = gameModel

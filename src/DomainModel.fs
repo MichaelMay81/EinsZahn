@@ -21,8 +21,8 @@ type Ship = {
             CallSign = "EinsZahn"
             Color    = "blue"
             Controls = Controls.init
-            Position = Vector.Zero
-            Rotation = 0.<deg>
+            Position = { X = 15.; Y = 15. }
+            Rotation = 90.<deg>
             Movement = Vector.Zero
             ShieldStrength = 1.}
 

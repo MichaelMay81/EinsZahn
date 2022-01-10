@@ -39,14 +39,14 @@ let shipFireCmd (ship:Ship) : Bullet =
     let dir = Vector.rotate {X=0.;Y=1.} (angle.convertDegToRad -ship.Rotation)
     { Position = ship.Position + (dir * 20.); Movement = ship.Movement + dir }
 
-let simulateShip (ship:Ship) (worldSize:Size) (timeStep:int) : Ship =
+let simulateShip (ship:Ship) (worldSize:Size) (timeStep:float) : Ship =
     let timeStep = (float timeStep) / 20.
     // move ship
     let newShip = { ship with Position = ship.Position + (ship.Movement * timeStep) }
     // check world boundaries
     { newShip with Position = checkWorldBoundaries newShip.Position newShip.Movement worldSize }
 
-let simulateBullets (worldSize:Size) (timeStep:int) (bullets:Bullet list) : Bullet list =
+let simulateBullets (worldSize:Size) (timeStep:float) (bullets:Bullet list) : Bullet list =
     let timeStep = (float timeStep) / 15.
     bullets
     // move bullet
